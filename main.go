@@ -44,6 +44,7 @@ func main() {
 
 func moveNonMatches(files []string, inputDir, newDir string, manifestFile io.Writer) {
 	csvWriter := csv.NewWriter(manifestFile)
+	defer csvWriter.Flush()
 	for _, badMatch := range files {
 		oldPath := filepath.Join(inputDir, badMatch)
 		newPath := filepath.Join(newDir, badMatch)
@@ -62,6 +63,7 @@ func moveNonMatches(files []string, inputDir, newDir string, manifestFile io.Wri
 func renameFiles(files []os.FileInfo, inputDir string, manifestFile io.Writer) []string {
 	var nonMatches []string
 	csvWriter := csv.NewWriter(manifestFile)
+	defer csvWriter.Flush()
 	for _, file := range files {
 		matched, err := match(file.Name())
 		if err != nil {
