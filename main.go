@@ -80,7 +80,7 @@ func setUncategorizedDir(isRevertMode bool, dirPath string) {
 }
 
 func getManifestFile(isRevertMode bool, inputDir string) *os.File {
-	manifestPath := filepath.Join(inputDir, "manifest.csv")
+	manifestPath := filepath.Join(inputDir, ".manifest.csv")
 	if isRevertMode {
 		file, err := os.OpenFile(manifestPath, os.O_RDWR, 0755)
 		if err != nil {
