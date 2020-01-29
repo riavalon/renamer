@@ -25,7 +25,7 @@ func main() {
 		panic(fmt.Errorf("I couldn't create the directory for the non-matching files. Got this error:\n%v", err))
 	}
 
-	nonMatches := renameFiles(files)
+	nonMatches := renameFiles(files, *inputDir)
 	moveNonMatches(nonMatches, *inputDir, newDir)
 }
 
@@ -40,7 +40,7 @@ func moveNonMatches(files []string, inputDir, newDir string) {
 	}
 }
 
-func renameFiles(files []os.FileInfo) []string {
+func renameFiles(files []os.FileInfo, inputDir string) []string {
 	var nonMatches []string
 	for _, file := range files {
 		matched, err := match(file.Name())
@@ -52,6 +52,8 @@ func renameFiles(files []os.FileInfo) []string {
 			nonMatches = append(nonMatches, file.Name())
 			continue
 		}
+
+		oldPath := filepath.Join(inputDir, file.Name())
 		nameAndExt := strings.Split(file.Name(), ".")
 		dateTaken := strings.Split(nameAndExt[0], "_")[0]
 		date, err := time.Parse("20060102", dateTaken)
@@ -61,7 +63,11 @@ func renameFiles(files []os.FileInfo) []string {
 
 		ext := nameAndExt[1]
 		newName := fmt.Sprintf("%s--%s.%s", date.Format("January_02_2006"), strings.Split(nameAndExt[0], "_")[1], ext)
-		fmt.Println(newName)
+		newPath := filepath.Join(inputDir, newName)
+		err = os.Rename(oldPath, newPath)
+		if err != nil {
+			panic(fmt.Errorf("I was unable to rename `%s`. Got this error:\n%v", file.Name(), err))
+		}
 	}
 	return nonMatches
 }
