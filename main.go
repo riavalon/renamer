@@ -25,6 +25,7 @@ func main() {
 	if err != nil {
 		panic(fmt.Errorf("I couldn't create the manifest file. OS gave this error:\n%v", err))
 	}
+	defer manifestFile.Close()
 	// manifestFile := filepath.Join(*inputDir, "manifest.csv")
 	newDir := filepath.Join(*inputDir, "uncategorized")
 	err = os.MkdirAll(newDir, 0755)
@@ -34,6 +35,11 @@ func main() {
 
 	nonMatches := renameFiles(files, *inputDir, manifestFile)
 	moveNonMatches(nonMatches, *inputDir, newDir, manifestFile)
+
+	err = manifestFile.Sync()
+	if err != nil {
+		panic(fmt.Errorf("I couldn't sync the manifest file after writing.. got this error:\n%v", err))
+	}
 }
 
 func moveNonMatches(files []string, inputDir, newDir string, manifestFile io.Writer) {
