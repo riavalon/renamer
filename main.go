@@ -41,20 +41,20 @@ func renameOrRevertFiles(isRevertMode bool, files []os.FileInfo, inputDir, uncat
 		records := getManifestValues(manifestFile)
 		for _, record := range records {
 			oldPath, newPath := record[0], record[1]
-			// err := os.Rename(newPath, oldPath)
-			fmt.Printf("Renaming `%s` to `%s`\n", newPath, oldPath)
-			// if err != nil {
-			// 	panic(fmt.Errorf("I ran into a problem while reverting file names.\n%v", err))
-			// }
+			err := os.Rename(newPath, oldPath)
+			if err != nil {
+				panic(fmt.Errorf("I ran into a problem while reverting file names.\n%v", err))
+			}
+		}
+		uncatRmErr := os.Remove(uncategorizedDir)
+		manifestRmErr := os.Remove(manifestFile.Name())
+		if uncatRmErr != nil {
+			fmt.Printf("Error: I couldn't remove the uncategorized folder. Got this error:\n%v", uncatRmErr)
 		}
 
-		// os.Remove(uncategorizedDir)
-		fmt.Println("Removing: ", uncategorizedDir)
-		fmt.Println("Removing: ", manifestFile.Name())
-
-		// grab oldPath and newPath
-		// perform an os.Rename from the newPath to the old Path.
-		// Clean up uncategorized folder and delete manifest file
+		if manifestRmErr != nil {
+			fmt.Printf("Error: I couldn't remove the manifest file. Got this error:\n%v", manifestRmErr)
+		}
 	} else {
 		nonMatches := renameFiles(files, inputDir, manifestFile)
 		moveNonMatches(nonMatches, inputDir, uncategorizedDir, manifestFile)
@@ -88,7 +88,7 @@ func getManifestFile(isRevertMode bool, inputDir string) *os.File {
 		}
 		return file
 	}
-	file, err := os.OpenFile(manifestPath, os.O_RDWR, 0755)
+	file, err := os.Create(manifestPath)
 	if err != nil {
 		panic(fmt.Errorf("I ran into an error trying to create the manifest file. Here's the error:\n%v", err))
 	}
