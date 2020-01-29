@@ -72,7 +72,7 @@ func getManifestValues(f *os.File) [][]string {
 
 func setUncategorizedDir(isRevertMode bool, dirPath string) {
 	if !isRevertMode {
-		err := os.MkdirAll(dirPath, 0666)
+		err := os.MkdirAll(dirPath, 0755)
 		if err != nil {
 			panic(fmt.Errorf("I couldn't create the directory for the non-matching files. Got this error:\n%v", err))
 		}
@@ -82,13 +82,13 @@ func setUncategorizedDir(isRevertMode bool, dirPath string) {
 func getManifestFile(isRevertMode bool, inputDir string) *os.File {
 	manifestPath := filepath.Join(inputDir, "manifest.csv")
 	if isRevertMode {
-		file, err := os.OpenFile(manifestPath, os.O_RDWR, 0666)
+		file, err := os.OpenFile(manifestPath, os.O_RDWR, 0755)
 		if err != nil {
 			panic(fmt.Errorf("I ran into an error trying to open the manifest file. Here's the error:\n%v", err))
 		}
 		return file
 	}
-	file, err := os.OpenFile(manifestPath, os.O_CREATE, 0666)
+	file, err := os.OpenFile(manifestPath, os.O_CREATE, 0755)
 	if err != nil {
 		panic(fmt.Errorf("I ran into an error trying to create the manifest file. Here's the error:\n%v", err))
 	}
