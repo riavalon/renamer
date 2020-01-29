@@ -88,7 +88,7 @@ func getManifestFile(isRevertMode bool, inputDir string) *os.File {
 		}
 		return file
 	}
-	file, err := os.OpenFile(manifestPath, os.O_CREATE, 0755)
+	file, err := os.OpenFile(manifestPath, os.O_RDWR, 0755)
 	if err != nil {
 		panic(fmt.Errorf("I ran into an error trying to create the manifest file. Here's the error:\n%v", err))
 	}
