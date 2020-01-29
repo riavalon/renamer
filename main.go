@@ -1,8 +1,10 @@
 package main
 
 import (
+	"encoding/csv"
 	"flag"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -19,17 +21,23 @@ func main() {
 		panic(fmt.Errorf("I was unable to read the directory: `%s`. I got this error:\n%v", *inputDir, err))
 	}
 
+	manifestFile, err := os.Create(filepath.Join(*inputDir, "manifest.csv"))
+	if err != nil {
+		panic(fmt.Errorf("I couldn't create the manifest file. OS gave this error:\n%v", err))
+	}
+	// manifestFile := filepath.Join(*inputDir, "manifest.csv")
 	newDir := filepath.Join(*inputDir, "uncategorized")
 	err = os.MkdirAll(newDir, 0755)
 	if err != nil {
 		panic(fmt.Errorf("I couldn't create the directory for the non-matching files. Got this error:\n%v", err))
 	}
 
-	nonMatches := renameFiles(files, *inputDir)
-	moveNonMatches(nonMatches, *inputDir, newDir)
+	nonMatches := renameFiles(files, *inputDir, manifestFile)
+	moveNonMatches(nonMatches, *inputDir, newDir, manifestFile)
 }
 
-func moveNonMatches(files []string, inputDir, newDir string) {
+func moveNonMatches(files []string, inputDir, newDir string, manifestFile io.Writer) {
+	csvWriter := csv.NewWriter(manifestFile)
 	for _, badMatch := range files {
 		oldPath := filepath.Join(inputDir, badMatch)
 		newPath := filepath.Join(newDir, badMatch)
@@ -37,11 +45,17 @@ func moveNonMatches(files []string, inputDir, newDir string) {
 		if err != nil {
 			fmt.Printf("I couldn't rename this file: `%s`. Got this error:\n%v", badMatch, err)
 		}
+		csvField := []string{oldPath, newPath, "false"}
+		err = csvWriter.Write(csvField)
+		if err != nil {
+			panic(fmt.Errorf("I couldn't write to the CSV file. Got this error:\n%v", err))
+		}
 	}
 }
 
-func renameFiles(files []os.FileInfo, inputDir string) []string {
+func renameFiles(files []os.FileInfo, inputDir string, manifestFile io.Writer) []string {
 	var nonMatches []string
+	csvWriter := csv.NewWriter(manifestFile)
 	for _, file := range files {
 		matched, err := match(file.Name())
 		if err != nil {
@@ -67,6 +81,11 @@ func renameFiles(files []os.FileInfo, inputDir string) []string {
 		err = os.Rename(oldPath, newPath)
 		if err != nil {
 			panic(fmt.Errorf("I was unable to rename `%s`. Got this error:\n%v", file.Name(), err))
+		}
+		csvField := []string{oldPath, newPath, "true"}
+		err = csvWriter.Write(csvField)
+		if err != nil {
+			panic(fmt.Errorf("I couldn't write to the CSV file. Got this error:\n%v", err))
 		}
 	}
 	return nonMatches
